@@ -1,0 +1,95 @@
+#' Multiple imputation using chained random forests and node proximities
+#'
+#' @description
+#' \code{RfNodeProx} multiple imputation method is for mixed types of variables,
+#' using conditional distributions formed by proximity measures of random
+#' forests (both in-bag and out-of-bag observations will be included).
+#'
+#' @details
+#' \code{imp.rfnode.prox} multiple imputation, for missing observations, the
+#' non-missing observations used for imputation will be found by whether two
+#' observations can be retrieved from the same predicting node, the observations
+#' used for imputation may not be necessarily be contained in the node.
+#'
+#' @param data A data frame or a matrix containing the incomplete data. Missing
+#' values should be coded as \code{NA}s.
+#'
+#' @param num.imp Number of multiple imputations. The default is
+#' \code{num.imp = 5}.
+#'
+#' @param max.iter Number of iterations. The default is \code{max.iter = 5}.
+#'
+#' @param num.trees Number of trees to build. The default is
+#' \code{num.trees = 10}.
+#'
+#' @param pre.boot If \code{TRUE}, bootstrapping prior to imputation will be
+#' performed to perform 'proper' multiple imputation, for accommodating sampling
+#' variation in estimating population regression parameters
+#' (see Shah et al. 2014).
+#' It should be noted that if \code{TRUE}, this option is in effect even if the
+#' number of trees is set to one.
+#'
+#' @param print.flag If \code{TRUE}, details will be sent to console. The
+#' default is \code{print.flag = FALSE}.
+#'
+#' @param ... Other arguments to pass down.
+#'
+#' @return An object of S3 class \code{mids}.
+#'
+#' @name imp.rfnode.prox
+#'
+#' @author Shangzhi Hong
+#'
+#' @references
+#' Hong, Shangzhi, et al. "Multiple imputation using chained random forests."
+#' Preprint, submitted April 30, 2020. https://arxiv.org/abs/2004.14823.
+#'
+#' Zhang, Haozhe, et al. "Random Forest Prediction Intervals."
+#' The American Statistician (2019): 1-20.
+#'
+#' Shah, Anoop D., et al. "Comparison of random forest and parametric
+#' imputation models for imputing missing data using MICE: a CALIBER study."
+#' American journal of epidemiology 179.6 (2014): 764-774.
+#'
+#' Malley, James D., et al. "Probability machines." Methods of information
+#' in medicine 51.01 (2012): 74-81.
+#'
+#' @examples
+#' # Prepare data: convert categorical variables to factors
+#' nhanes.fix <- nhanes
+#' nhanes.fix[, c("age", "hyp")] <- lapply(nhanes[, c("age", "hyp")], as.factor)
+#' # Perform imputation using imp.rfnode.prox
+#' imp <- imp.rfnode.prox(nhanes.fix)
+#' # Do repeated analyses
+#' anl <- with(imp, lm(chl ~ bmi + hyp))
+#' # Pool the results
+#' pool <- pool(anl)
+#' # Get pooled estimates
+#' reg.ests(pool)
+#'
+#' @export
+imp.rfnode.prox <- function(
+    data,
+    num.imp = 5,
+    max.iter = 5,
+    num.trees = 10,
+    pre.boot = TRUE,
+    print.flag = FALSE,
+    ...) {
+    return(mice(
+        data = data,
+        method = "rfnode",
+        m = num.imp,
+        maxit = max.iter,
+        num.trees.node = num.trees,
+        pre.boot = pre.boot,
+        use.node.cond.dist = FALSE,
+        obs.eq.prob = FALSE,
+        do.sample = TRUE,
+        printFlag = print.flag,
+        # Try to avoid the influences of remove.lindep()
+        # TODO: Change to `eps = 0` after release of mice v3.8.4
+        maxcor = 1.0,
+        eps = .Machine$double.xmin,
+        ...))
+}
