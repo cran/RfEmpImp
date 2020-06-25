@@ -1,10 +1,10 @@
-#' Perform multiple imputation based on the empirical error distribution of
-#' random forests
+#' Perform multiple imputation using the empirical error distributions and
+#' predicted probabilities of random forests
 #'
 #' @description
 #' \code{RfEmp} multiple imputation method is for mixed types of variables,
 #' and calls corresponding functions based on variable types.
-#' Categorical variables should be of type \code{factor} or \code{logical}.
+#' Categorical variables should be of type \code{factor} or \code{logical}, etc.
 #'
 #' \code{RfPred.Emp} is used for continuous variables, and \code{RfPred.Cate}
 #' is used for categorical variables.
@@ -123,9 +123,11 @@ imp.rfemp <- function(
         num.trees.cate = num.trees.cate,
         num.threads = num.threads,
         printFlag = print.flag,
-        # Try to avoid the influences of remove.lindep()
-        # TODO: Change to `eps = 0` after release of mice v3.8.4
+        # Bypass remove.lindep() in mice >= 3.9.0
         maxcor = 1.0,
-        eps = .Machine$double.xmin,
+        eps = 0,
+        # Bypass collinearity and constant checks
+        remove.collinear = FALSE,
+        remove.constant = FALSE,
         ...))
 }

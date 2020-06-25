@@ -5,8 +5,8 @@
 \alias{mice.impute.rfnode}
 \alias{mice.impute.rfnode.cond}
 \alias{mice.impute.rfnode.prox}
-\title{Sampling function for multiple imputation based on predicting nodes of
-random forests}
+\title{Univariate sampler function for mixed types of variables for node-based
+imputation, using predicting nodes of random forests}
 \usage{
 mice.impute.rfnode(
   y,
@@ -45,7 +45,7 @@ mice.impute.rfnode.prox(
 )
 }
 \arguments{
-\item{y}{Vector to be imputed}
+\item{y}{Vector to be imputed.}
 
 \item{ry}{Logical vector of length \code{length(y)} indicating the
 the subset \code{y[ry]} of elements in \code{y} to which the imputation
@@ -72,21 +72,21 @@ if \code{FALSE}, use proximity-based imputation.}
 \item{obs.eq.prob}{If \code{TRUE}, the candidate observations will be sampled
 with equal probability.}
 
-\item{do.sample}{If \code{TRUE}, draw samples for missing observations;
-if \code{FALSE}, the corresponding observations numbers will be returned.
-For testing purposes, and WILL CAUSE ERRORS for the \code{mice} sampler
+\item{do.sample}{If \code{TRUE}, draw samples for missing observations.
+If \code{FALSE}, the corresponding observations numbers will be returned,
+for testing purposes only, and WILL CAUSE ERRORS for the \code{mice} sampler
 function.}
 
 \item{num.threads}{Number of threads for parallel computing. The default is
 \code{num.threads = NULL} and all the processors available can be used.}
 
-\item{...}{Other arguments to pass down}
+\item{...}{Other arguments to pass down.}
 
 \item{num.trees}{Number of trees to build, default to \code{10}.}
 }
 \value{
 Vector with imputed data, same type as \code{y}, and of length
-\code{sum(wy)}
+\code{sum(wy)}.
 }
 \description{
 Please note that functions with names starting with "mice.impute" are
@@ -111,20 +111,23 @@ this function. By default, \code{mice.impute.rfnode} works like
 \code{mice.impute.rfnode.cond}.
 }
 \details{
-Users can get more flexibility from \code{mice.impute.rfnode} function,
+Advanced users can get more flexibility from \code{mice.impute.rfnode}
+function, as it provides more options than \code{mice.impute.rfnode.cond} or
+\code{mice.impute.rfnode.prox}.
 }
 \examples{
 # Prepare data: convert categorical variables to factors
-nhanes.fix <- nhanes
-nhanes.fix[, c("age", "hyp")] <- lapply(nhanes[, c("age", "hyp")], as.factor)
+nhanes.fix <- conv.factor(nhanes, c("age", "hyp"))
 
 # Using "rfnode.cond" or "rfnode"
 impRfNodeCond <- mice(nhanes.fix, method = "rfnode.cond", m = 5,
-maxit = 5, maxcor = 1.0, printFlag = FALSE)
+maxit = 5, maxcor = 1.0, eps = 0, printFlag = FALSE)
 
 # Using "rfnode.prox"
 impRfNodeProx <- mice(nhanes.fix, method = "rfnode.prox", m = 5,
-maxit = 5, maxcor = 1.0, printFlag = FALSE)
+maxit = 5, maxcor = 1.0, eps = 0,
+remove.collinear = FALSE, remove.constant = FALSE,
+printFlag = FALSE)
 
 }
 \references{

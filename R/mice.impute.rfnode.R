@@ -1,5 +1,5 @@
-#' Sampling function for multiple imputation based on predicting nodes of
-#' random forests
+#' Univariate sampler function for mixed types of variables for node-based
+#' imputation, using predicting nodes of random forests
 #'
 #' @description
 #' Please note that functions with names starting with "mice.impute" are
@@ -24,9 +24,11 @@
 #' \code{mice.impute.rfnode.cond}.
 #'
 #' @details
-#' Users can get more flexibility from \code{mice.impute.rfnode} function,
+#' Advanced users can get more flexibility from \code{mice.impute.rfnode}
+#' function, as it provides more options than \code{mice.impute.rfnode.cond} or
+#' \code{mice.impute.rfnode.prox}.
 #'
-#' @param y Vector to be imputed
+#' @param y Vector to be imputed.
 #'
 #' @param ry Logical vector of length \code{length(y)} indicating the
 #' the subset \code{y[ry]} of elements in \code{y} to which the imputation
@@ -44,7 +46,6 @@
 #' @param num.trees.node Number of trees to build, default to \code{10}. For
 #' function \code{mice.impute.rfnode} only.
 #'
-#'
 #' @param pre.boot Perform bootstrap prior to imputation to get 'proper'
 #' imputation, i.e. accommodating sampling variation in estimating population
 #' regression parameters (see Shah et al. 2014).
@@ -56,18 +57,18 @@
 #' @param obs.eq.prob If \code{TRUE}, the candidate observations will be sampled
 #' with equal probability.
 #'
-#' @param do.sample If \code{TRUE}, draw samples for missing observations;
-#' if \code{FALSE}, the corresponding observations numbers will be returned.
-#' For testing purposes, and WILL CAUSE ERRORS for the \code{mice} sampler
+#' @param do.sample If \code{TRUE}, draw samples for missing observations.
+#' If \code{FALSE}, the corresponding observations numbers will be returned,
+#' for testing purposes only, and WILL CAUSE ERRORS for the \code{mice} sampler
 #' function.
 #'
 #' @param num.threads Number of threads for parallel computing. The default is
 #' \code{num.threads = NULL} and all the processors available can be used.
 #'
-#' @param ... Other arguments to pass down
+#' @param ... Other arguments to pass down.
 #'
 #' @return Vector with imputed data, same type as \code{y}, and of length
-#' \code{sum(wy)}
+#' \code{sum(wy)}.
 #'
 #' @author Shangzhi Hong
 #'
@@ -85,16 +86,17 @@
 #'
 #' @examples
 #' # Prepare data: convert categorical variables to factors
-#' nhanes.fix <- nhanes
-#' nhanes.fix[, c("age", "hyp")] <- lapply(nhanes[, c("age", "hyp")], as.factor)
+#' nhanes.fix <- conv.factor(nhanes, c("age", "hyp"))
 #'
 #' # Using "rfnode.cond" or "rfnode"
 #' impRfNodeCond <- mice(nhanes.fix, method = "rfnode.cond", m = 5,
-#' maxit = 5, maxcor = 1.0, printFlag = FALSE)
+#' maxit = 5, maxcor = 1.0, eps = 0, printFlag = FALSE)
 #'
 #' # Using "rfnode.prox"
 #' impRfNodeProx <- mice(nhanes.fix, method = "rfnode.prox", m = 5,
-#' maxit = 5, maxcor = 1.0, printFlag = FALSE)
+#' maxit = 5, maxcor = 1.0, eps = 0,
+#' remove.collinear = FALSE, remove.constant = FALSE,
+#' printFlag = FALSE)
 #'
 #' @export
 mice.impute.rfnode <- function(
@@ -120,12 +122,19 @@ mice.impute.rfnode <- function(
     }
     xMis <- x[wy, , drop = FALSE]
     # Output in-bag list when using conditional distribution
-    # TODO: Add `...` back to ranger after release of v0.12.3
-    rfObj <- suppressWarnings(ranger(x = xObs,
+    # TODO: Let ranger handle unused arguments after v0.12.3
+    # rfObj <- suppressWarnings(ranger(x = xObs,
+    #                 y = yObs,
+    #                 num.trees = num.trees.node,
+    #                 keep.inbag = use.node.cond.dist,
+    #                 num.threads = num.threads,
+    #                 ...))
+    rfObj <- rangerCallerSafe(x = xObs,
                     y = yObs,
                     num.trees = num.trees.node,
                     keep.inbag = use.node.cond.dist,
-                    num.threads = num.threads))
+                    num.threads = num.threads,
+                    ...)
     # Get Nodes for training and test set
     nodeObjMis <- predict(rfObj, data = xMis, type = "terminalNodes")
     nodeObjObs <- predict(rfObj, data = xObs, type = "terminalNodes")
@@ -201,7 +210,7 @@ mice.impute.rfnode <- function(
 # instead of joining tables (like "quantforesterror" in R package
 # "forestError").
 #
-# 2. The nodes is found by corresponding node IDs, which is different from
+# 2. The nodes are identified by corresponding IDs, which is different from
 # previous implementations like in Doove et al., that used equality testings
 # for double precision values and one-by-one way for constructing RF.
 ############################################################################

@@ -2,7 +2,8 @@
 % Please edit documentation in R/imp.rfnode.prox.R
 \name{imp.rfnode.prox}
 \alias{imp.rfnode.prox}
-\title{Multiple imputation using chained random forests and node proximities}
+\title{Perform multiple imputation based on the conditional distribution formed
+using node proximity}
 \usage{
 imp.rfnode.prox(
   data,
@@ -44,13 +45,14 @@ An object of S3 class \code{mids}.
 \description{
 \code{RfNodeProx} multiple imputation method is for mixed types of variables,
 using conditional distributions formed by proximity measures of random
-forests (both in-bag and out-of-bag observations will be included).
+forests (both in-bag and out-of-bag observations will be used for imputation).
 }
 \details{
-\code{imp.rfnode.prox} multiple imputation, for missing observations, the
-non-missing observations used for imputation will be found by whether two
-observations can be retrieved from the same predicting node, the observations
-used for imputation may not be necessarily be contained in the node.
+During imputation using \code{imp.rfnode.prox}, for missing observations, the
+candidate non-missing observations will be found by whether two observations
+can be retrieved from the same predicting node during prediction. The
+observations used for imputation may not be necessarily be contained in the
+terminal node of random forest model.
 }
 \examples{
 # Prepare data: convert categorical variables to factors

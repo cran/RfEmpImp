@@ -2,7 +2,8 @@
 % Please edit documentation in R/mice.impute.rfpred.emp.R
 \name{mice.impute.rfpred.emp}
 \alias{mice.impute.rfpred.emp}
-\title{Multiple imputation using chained random forests: RfPred.Emp}
+\title{Univariate sampler function for continuous variables using the empirical
+error distributions}
 \usage{
 mice.impute.rfpred.emp(
   y,
@@ -11,7 +12,6 @@ mice.impute.rfpred.emp(
   wy = NULL,
   num.trees.cont = 10,
   sym.dist = TRUE,
-  emp.err.cont = TRUE,
   alpha.emp = 0,
   pre.boot = TRUE,
   num.threads = NULL,
@@ -40,12 +40,6 @@ prediction errors will be assumed to be symmetric; if \code{FALSE}, the
 empirical distribution will be kept intact. The default is
 \code{sym.dist = TRUE}.
 This option is invalid when \code{emp.err.cont = FALSE}.}
-
-\item{emp.err.cont}{If \code{TRUE}, the empirical distribution of out-of-bag
-prediction errors will be used for constructing conditional distributions;
-if \code{FALSE}, for normality will be assumed for the distribution for the
-prediction errors, the variance estimate equals to overall out-of-bag
-prediction error, i.e. out-of-bag mean squared error (see Shah et al. 2014).}
 
 \item{alpha.emp}{The "significance level" for the empirical distribution of
 out-of-bag prediction errors, can be used for prevention for outliers
@@ -95,7 +89,9 @@ of out-of-bag prediction errors of random forests.
 # Users can set method = "rfpred.emp" in call to mice to use this method
 data("airquality")
 impObj <- mice(airquality, method = "rfpred.emp", m = 5,
-maxit = 5, maxcor = 1.0, eps = .Machine$double.xmin, printFlag = FALSE)
+maxit = 5, maxcor = 1.0, eps = 0,
+remove.collinear = FALSE, remove.constant = FALSE,
+printFlag = FALSE)
 
 }
 \references{
